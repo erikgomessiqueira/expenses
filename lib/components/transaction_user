@@ -1,0 +1,39 @@
+import 'dart:math';
+import 'package:expenses/components/transaction_form.dart';
+import 'package:expenses/components/transaction_list.dart';
+import 'package:expenses/models/transactions.dart';
+import 'package:flutter/material.dart';
+
+class TransacrionUser extends StatefulWidget {
+  const TransacrionUser({super.key});
+
+  @override
+  State<TransacrionUser> createState() => _TransacrionUserState();
+}
+
+class _TransacrionUserState extends State<TransacrionUser> {
+  _addTransaction({required String title, required double value}) {
+    final newTransaction = Transaction(
+      id: Random().nextDouble().toString(),
+      title: title,
+      value: value,
+      date: DateTime.now(),
+    );
+
+    setState(() {
+      _transactions.add(newTransaction);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: <Widget>[
+        TransactionList(
+          transactions: _transactions,
+        ),
+        TransactionForm(onSubmit: _addTransaction),
+      ],
+    );
+  }
+}
