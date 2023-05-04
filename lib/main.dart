@@ -28,6 +28,10 @@ class ExpensesApp extends StatelessWidget {
             fontWeight: FontWeight.bold,
             color: Colors.black,
           ),
+          labelLarge: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold
+          ),  
         ),
         appBarTheme: const AppBarTheme(
           titleTextStyle: TextStyle(
@@ -48,32 +52,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final List<Transaction> _transactions = [
-    Transaction(
-      id: 't0',
-      title: 'Conta veia',
-      value: 700,
-      date: DateTime.now().subtract(const Duration(days: 90)),
-    ),
-    Transaction(
-      id: 't1',
-      title: 'Capinha de celular nova',
-      value: 29.90,
-      date: DateTime.now().subtract(const Duration(days: 2)),
-    ),
-    Transaction(
-      id: 't2',
-      title: 'Fone de ouvido',
-      value: 70.00,
-      date: DateTime.now().subtract(const Duration(days: 1)),
-    ),
-    Transaction(
-      id: 't3',
-      title: 'Sapato novo',
-      value: 500.58,
-      date: DateTime.now().subtract(const Duration(days: 4)),
-    ),
-  ];
+  final List<Transaction> _transactions = [];
+  bool _showChart = false;
 
   List<Transaction> get _recentTransactions {
     return _transactions.where((trasaction) {
@@ -83,12 +63,12 @@ class _MyHomePageState extends State<MyHomePage> {
     }).toList();
   }
 
-  _addTransaction({required String title, required double value}) {
+  _addTransaction({required String title, required double value, required DateTime date}) {
     final newTransaction = Transaction(
       id: Random().nextDouble().toString(),
       title: title,
       value: value,
-      date: DateTime.now(),
+      date: date,
     );
 
     setState(() {
@@ -98,9 +78,18 @@ class _MyHomePageState extends State<MyHomePage> {
     Navigator.of(context).pop();
   }
 
+  _removeTransaction(String id){
+      setState(() {
+        _transactions.removeWhere((transaction){
+          return transaction.id == id;
+        });
+      });
+    }
+
   _openTrasactionFormModal(BuildContext context) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       builder: (_) {
         return TransactionForm(
           onSubmit: _addTransaction,
@@ -111,24 +100,49 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
+    final mediaQuery =  MediaQuery.of(context);
+    bool isLandscape = mediaQuery.orientation == Orientation.landscape;
+
+    final appBar = AppBar(
         title: const Text('Despesas Pessoais da semana'),
         actions: <Widget>[
+          if(isLandscape)
+            IconButton(
+              onPressed: () => setState(() {
+                _showChart = !_showChart;
+              }),
+              icon:  Icon( _showChart? Icons.list: Icons.show_chart),
+            ),
           IconButton(
             onPressed: () => _openTrasactionFormModal(context),
             icon: const Icon(Icons.add),
-          )
+          ),
         ],
-      ),
+      );
+
+    final avaliableHeight =mediaQuery.size.height - appBar.preferredSize.height -mediaQuery.padding.top;
+
+    return Scaffold(
+      appBar: appBar,
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            Chart(
-              recentTransaction: _recentTransactions,
-            ),
-            TransactionList(transactions: _transactions),
+            if(_showChart || !isLandscape ) 
+                SizedBox(
+                  height:avaliableHeight * (isLandscape? .8 : .3),
+                  child: Chart(
+                    recentTransaction: _recentTransactions,
+                  ),
+                ),
+            if(!_showChart || !isLandscape)
+              SizedBox(
+                height: avaliableHeight * (isLandscape? 1 : .7),
+                child: TransactionList(
+                  transactions: _transactions, 
+                  onRemove: _removeTransaction,
+                  ),
+                ),       
           ],
         ),
       ),

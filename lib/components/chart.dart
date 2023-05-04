@@ -7,7 +7,7 @@ class Chart extends StatelessWidget {
   final List<Transaction> recentTransaction;
   const Chart({super.key, required this.recentTransaction});
 
-  List<Map<String, Object>> get groupedTrasactions {
+  List<Map<String, Object>> get groupedTransactions {
     return List.generate(7, (index) {
       final weekDay = DateTime.now().subtract(Duration(days: index));
 
@@ -28,11 +28,11 @@ class Chart extends StatelessWidget {
         'day': DateFormat.E().format(weekDay)[0],
         'value': totalSum,
       };
-    });
+    }).reversed.toList();
   }
 
   double get _weekTotalValue {
-    return groupedTrasactions.fold(0, (previousValue, transaction) {
+    return groupedTransactions.fold(0, (previousValue, transaction) {
       return previousValue + (transaction['value'] as double);
     });
   }
@@ -46,13 +46,16 @@ class Chart extends StatelessWidget {
         padding: const EdgeInsets.all(10),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: groupedTrasactions.map(
+          children: groupedTransactions.map(
             (trasaction) {
               return Flexible(
                 fit: FlexFit.tight,
                 child: ChartBar(
                   label: trasaction['day'].toString(),
-                  percentage: (trasaction['value'] as double) / _weekTotalValue,
+                  percentage: 
+                    _weekTotalValue == 0
+                      ? 0
+                      :(trasaction['value'] as double) / _weekTotalValue,
                   value: double.parse(trasaction['value'].toString()),
                 ),
               );
